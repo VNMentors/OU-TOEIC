@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <style>
+        * {
+            margin: 0;
+            font-family: 'Lora', serif !important;
+            overflow: hidden;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        /* Track */
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+
+        /* Handle */
+        ::-webkit-scrollbar-thumb {
+            background: #888;
+        }
+
+        /* Handle on hover */
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+
+        .header {
+            display: grid;
+            grid-template-columns: 72px auto;
+            background: linear-gradient(0deg, rgb(58, 243, 98) 0%, rgb(11, 175, 82) 100%);
+        }
+
+        .header .content {
+            color: #ffffff;
+            height: 72px;
+            padding: 0 16px;
+            overflow: auto;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        .header .image {
+            width: 72px;
+            height: 72px;
+        }
+
+        .content {
+            height: 187px;
+            padding: 16px;
+            overflow: auto;
+        }
+
+        .footer {
+            height: 28px;
+            padding: 16px;
+            text-align: right;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        p {
+            font-size: 14px;
+        }
+
+        button {
+            font-size: 16px;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="header">
+        <div class="image">
+            <img style="object-fit: contain;" src="../assets/logo.png" alt="logo-app" width="100%" height="100%">
+        </div>
+        <div class="content">
+            <h3 style="font-weight: 600;">Cập nhật phiên bản mới</h3>
+            <h5 style="font-weight: 400;">Version <span id="version"></span></h5>
+        </div>
+    </div>
+    <div class="content">
+        <p style="font-weight: 500;">
+           <b> Nội dung mới: <span id="version-sub"></span></b>
+        </p>
+        <div style="font-weight: 400; font-size: 14px" id="changelog">
+
+        </div>
+    </div>
+    <div id="footer-update" class="footer">
+        <!-- <button id="later" style="background: lightgray;">Để sau</button> -->
+        <button id="update"
+            style="background: linear-gradient(0deg, rgb(3, 181, 0) 0%, rgba(27, 185, 95, 0.76) 100%);  color: #fff; outline: none;">Cập nhật</button>
+    </div>
+
+    <script>
+        // Listen for messages
+        const { ipcRenderer } = require('electron');
+        ipcRenderer.on('message', function (event, data) {
+
+            document.getElementById('changelog').innerHTML = data.releaseNotes;
+            document.getElementById('version').innerText = data.version;
+            document.getElementById('version-sub').innerText = data.version;
+
+            // document.getElementById(" later").addEventListener("click", () => {
+            //     ipcRenderer.send('updateAction', "close");
+            // })
+
+            document.getElementById("update").addEventListener("click", () => {
+                ipcRenderer.send('updateAction', "start");
+            })
+        })
+
+        ipcRenderer.on('download_progress', function (event, data) {
+            if (data == 'success') {
+                document.getElementById("footer-update").innerHTML = `
+            <div style="font-weight: 400; font-size: 14px; text-align: center;">Đã tải xuống thành công. Đang khởi động
+                lại ...</div>
+            `
+
+                setTimeout(() => ipcRenderer.send('updateAction', "success"), 5000)
+            } else {
+                document.getElementById("footer-update").innerHTML = `<div style="font-weight: 400; font-size: 14px">${data}
+            </div>`
+            }
+        })
+    </script>
+</body>
+
+</html>
